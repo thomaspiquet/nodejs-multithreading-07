@@ -96,10 +96,10 @@ export class Core {
               '] Found [' +
               Colors.green(Core.totalFoundPrimes.toString()) +
               '] Primes in ' +
-              Colors.cyan(Core.realtime.toFixed(3)) +
-              ' ms (Real Time) and in ' +
-              Colors.cyan(Core.timeCumulation.toFixed(3)) +
-              ' ms (Cumulative Time) | ' +
+              Colors.cyan((Core.realtime / 1000).toFixed(3)) +
+              ' s (Real Time) and in ' +
+              Colors.cyan((Core.timeCumulation / 1000).toFixed(3)) +
+              ' s (Cumulative Time) | ' +
               Colors.green(this.THREAD_COUNT.toString()) +
               ' Thread(s) are ' +
               Colors.green(timeFaster.toFixed(2)) +
