@@ -32,6 +32,7 @@ export class PrimeWorker {
 
     const start = process.hrtime();
 
+    // Split block in sub block
     let subBlockCount = Math.trunc(data.size / PrimeWorker.SUB_BLOCK_SIZE);
     const hasReminder = PrimeWorker.SUB_BLOCK_SIZE * subBlockCount < data.size;
     if (hasReminder) {
@@ -40,6 +41,7 @@ export class PrimeWorker {
 
     for (let i = 0; i < subBlockCount; ++i) {
       if (i === subBlockCount - 1 && hasReminder) {
+        // If this is last block and its a reminder
         this.check(
           data.start + i * PrimeWorker.SUB_BLOCK_SIZE,
           data.start + data.size - 1,
@@ -54,6 +56,7 @@ export class PrimeWorker {
 
     const end = process.hrtime(start);
 
+    // Send results to parent thread
     parentPort.postMessage({
       type: ChildMessageType.BlockDone,
       data: {
@@ -66,21 +69,21 @@ export class PrimeWorker {
     });
   }
 
-  private async check(start, limit) {
-    if (start > limit) {
-      return;
+  private check(start, limit) {
+    // For start number to limit number
+    for (let i = start; i < limit; ++i) {
+      // If i is prime
+      if (this.isPrime(i)) {
+        // Store it
+        this.primes.push(i);
+      }
     }
-    const isNumberPrime = this.isPrime(start);
-    if (isNumberPrime) {
-      this.primes.push(start);
-    }
-    ++start;
-    this.check(start, limit);
-    return;
   }
 
   private isPrime(n) {
+    // Iterate from 2 to number N
     for (let i = 2; i < n; ++i) {
+      // If number N % i is equal to 0, return false
       if (n % i === 0) {
         return false;
       }

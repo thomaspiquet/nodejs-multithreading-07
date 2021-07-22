@@ -9,14 +9,16 @@ export class Core {
   private static readonly BLOCK_SIZE = 2500;
   // Max number to search for primes
   private static readonly MAX_NUMBER = 1000000;
+
   // Worker handle array
   private static workers: WorkerHost[] = [];
-  // Must loop
-  private static mustLoop: boolean = true;
   // Array of block start
   private static alreadyProcessedBlocks: number[] = [];
   // Array of block results
   private static blockResults: any[] = [];
+
+  // Must loop
+  private static mustLoop: boolean = true;
   // Block processing cumulative time
   private static timeCumulation: number = 0;
   // Total number of primes numbers found
@@ -44,17 +46,27 @@ export class Core {
     Core.start = process.hrtime();
     // Loop during the process
     while (Core.mustLoop) {
+      // For each thread
       for (let i = 0; i < Core.workers.length; ++i) {
+        // Check if some has block results
         const processedBlocks = Core.workers[i].getBlockResults();
+
         if (processedBlocks.length > 0) {
+          // If block result is the last one
           if (
             processedBlocks[0].start + processedBlocks[0].size >
             Core.MAX_NUMBER
           ) {
             Core.isOver = true;
           }
+
+          // Add this block primes numbers count to Core.totalFoundPrimes
           Core.totalFoundPrimes += processedBlocks[0].primeNumbers.length;
+
+          // Add this block processing time to Core.timeCumulation
           Core.timeCumulation += processedBlocks[0].time;
+
+          // Log this block results
           console.log(
             '[Main] Worker [' +
               Colors.red(processedBlocks[0].workerId) +
@@ -70,24 +82,30 @@ export class Core {
               Colors.cyan(processedBlocks[0].time.toFixed(3)) +
               ' ms',
           );
+
+          // Store this block results
           Core.blockResults = Core.blockResults.concat(processedBlocks);
         }
+        // If last block created is less than Core.MAX_NUMBER
         if (
           Core.alreadyProcessedBlocks.length === 0 ||
           Core.alreadyProcessedBlocks[Core.alreadyProcessedBlocks.length - 1] <
             Core.MAX_NUMBER
         ) {
+          // If worker is not processing a block
           if (!Core.workers[i].isProcessingBlock) {
+            // Send him a block to process
             Core.workers[i].sendBlockToProcess(
               Core.getBlockToProcess(),
               Core.BLOCK_SIZE,
             );
           }
         }
+        // If last block to process have been processed, Core.isOver === true
         if (Core.isOver) {
           const end = process.hrtime(Core.start);
           Core.realtime = (end[0] * 1e9 + end[1]) / 1000000;
-          const timeFaster = (Core.timeCumulation / Core.realtime);
+          const timeFaster = Core.timeCumulation / Core.realtime;
           console.log(
             '[Main] Results : From [' +
               Colors.yellow('2') +
@@ -103,8 +121,10 @@ export class Core {
               Colors.green(this.THREAD_COUNT.toString()) +
               ' Thread(s) are ' +
               Colors.green(timeFaster.toFixed(2)) +
-              'x Faster than 1 Thread | Longer is the processing, better is the gain !');
+              'x Faster than 1 Thread | Longer is the processing, better is the gain !',
+          );
 
+          // Kill all thread
           for (let j = 0; j < Core.workers.length; ++j) {
             Core.workers[j].sendKill();
           }
@@ -120,11 +140,13 @@ export class Core {
 
   private static getBlockToProcess(): number {
     let newBlock;
+    // If there is already created block
     if (Core.alreadyProcessedBlocks.length > 0) {
       newBlock =
         Core.alreadyProcessedBlocks[Core.alreadyProcessedBlocks.length - 1] +
         Core.BLOCK_SIZE;
     } else {
+      // Start with 2.
       newBlock = 2;
     }
     Core.alreadyProcessedBlocks.push(newBlock);
